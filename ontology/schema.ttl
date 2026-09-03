@@ -1,0 +1,183 @@
+# 河北省新冠中医诊疗方案 - OWL 本体模式
+# Prefix: tcm-hebei: https://tcm-covid19-hebei.openclaw.ai/ontology#
+
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix tcm:  <https://tcm-covid19-hebei.openclaw.ai/ontology#> .
+
+<https://tcm-covid19-hebei.openclaw.ai/ontology> a owl:Ontology ;
+    rdfs:label "河北省新冠中医诊疗方案本体"@zh ;
+    rdfs:comment "基于第七版诊疗方案的中医知识本体，支持证型辨识、方剂推荐、穴位查询与推理"@zh ;
+    owl:versionInfo "2.0" .
+
+# ==================== 类定义 ====================
+
+tcm:Disease a owl:Class ;
+    rdfs:label "疾病"@zh ;
+    rdfs:comment "疾病实体，如新冠感染"@zh .
+
+tcm:Phase a owl:Class ;
+    rdfs:label "病程阶段"@zh ;
+    rdfs:comment "疾病进展阶段：轻型/中型/重型/危重型/恢复期"@zh .
+
+tcm:Syndrome a owl:Class ;
+    rdfs:label "证型"@zh ;
+    rdfs:comment "中医辨证分型，是本体的核心推理枢纽"@zh .
+
+tcm:Symptom a owl:Class ;
+    rdfs:label "症状"@zh ;
+    rdfs:comment "临床表现，包括主观症状和体征"@zh .
+
+tcm:TongueSign a owl:Class ;
+    rdfs:label "舌象"@zh ;
+    rdfs:comment "舌质和舌苔表现"@zh .
+tcm:TongueSign rdfs:subClassOf tcm:Symptom .
+
+tcm:PulseSign a owl:Class ;
+    rdfs:label "脉象"@zh ;
+    rdfs:comment "脉诊表现"@zh .
+tcm:PulseSign rdfs:subClassOf tcm:Symptom .
+
+tcm:Formula a owl:Class ;
+    rdfs:label "方剂"@zh ;
+    rdfs:comment "中药方剂，含汤剂和中成药"@zh .
+
+tcm:Decoction a owl:Class ;
+    rdfs:label "汤剂"@zh ;
+    rdfs:comment "水煎服中药方剂"@zh .
+tcm:Decoction rdfs:subClassOf tcm:Formula .
+
+tcm:PatentMedicine a owl:Class ;
+    rdfs:label "中成药"@zh ;
+    rdfs:comment "成药制剂"@zh .
+tcm:PatentMedicine rdfs:subClassOf tcm:Formula .
+
+tcm:Herb a owl:Class ;
+    rdfs:label "中药"@zh ;
+    rdfs:comment "单味中药饮片"@zh .
+
+tcm:Acupoint a owl:Class ;
+    rdfs:label "腧穴"@zh ;
+    rdfs:comment "针灸穴位"@zh .
+
+tcm:Meridian a owl:Class ;
+    rdfs:label "经络"@zh ;
+    rdfs:comment "十二经脉及奇经八脉"@zh .
+
+tcm:TreatmentMethod a owl:Class ;
+    rdfs:label "治法"@zh ;
+    rdfs:comment "治疗方法类别：内治法、针灸、推拿等"@zh .
+
+tcm:ExternalTherapy a owl:Class ;
+    rdfs:label "外治法"@zh ;
+    rdfs:comment "非药物内服的治疗方法"@zh .
+tcm:ExternalTherapy rdfs:subClassOf tcm:TreatmentMethod .
+
+tcm:PatentCategory a owl:Class ;
+    rdfs:label "中成药功效类别"@zh ;
+    rdfs:comment "中成药按功效的分类"@zh .
+
+# ==================== 属性定义 ====================
+
+# --- 对象属性 ---
+
+tcm:hasPhase a owl:ObjectProperty ;
+    rdfs:domain tcm:Syndrome ;
+    rdfs:range tcm:Phase ;
+    rdfs:label "所属阶段"@zh .
+
+tcm:hasSymptom a owl:ObjectProperty ;
+    rdfs:domain tcm:Syndrome ;
+    rdfs:range tcm:Symptom ;
+    rdfs:label "表现症状"@zh ;
+    owl:cardinality "多值" .
+
+tcm:recommendedFormula a owl:ObjectProperty ;
+    rdfs:domain tcm:Syndrome ;
+    rdfs:range tcm:Formula ;
+    rdfs:label "推荐方剂"@zh .
+
+tcm:composedOf a owl:ObjectProperty ;
+    rdfs:domain tcm:Decoction ;
+    rdfs:range tcm:Herb ;
+    rdfs:label "组成药物"@zh .
+
+tcm:treatsSyndrome a owl:ObjectProperty ;
+    rdfs:domain tcm:Formula ;
+    rdfs:range tcm:Syndrome ;
+    rdfs:label "主治证型"@zh ;
+    owl:inverseOf tcm:recommendedFormula .
+
+tcm:hasAcupoint a owl:ObjectProperty ;
+    rdfs:domain tcm:Syndrome ;
+    rdfs:range tcm:Acupoint ;
+    rdfs:label "推荐穴位"@zh .
+
+tcm:belongs_toMeridian a owl:ObjectProperty ;
+    rdfs:domain tcm:Acupoint ;
+    rdfs:range tcm:Meridian ;
+    rdfs:label "所属经络"@zh .
+
+tcm:hasCategory a owl:ObjectProperty ;
+    rdfs:domain tcm:PatentMedicine ;
+    rdfs:range tcm:PatentCategory ;
+    rdfs:label "功效类别"@zh .
+
+tcm:hasExternalTherapy a owl:ObjectProperty ;
+    rdfs:domain tcm:Syndrome ;
+    rdfs:range tcm:ExternalTherapy ;
+    rdfs:label "推荐外治法"@zh .
+
+# --- 数据属性 ---
+
+tcm:hasDosage a owl:DatatypeProperty ;
+    rdfs:domain tcm:Herb ;
+    rdfs:range xsd:string ;
+    rdfs:label "用量"@zh .
+
+tcm:hasAdministration a owl:DatatypeProperty ;
+    rdfs:domain tcm:Formula ;
+    rdfs:range xsd:string ;
+    rdfs:label "服法"@zh .
+
+tcm:hasFrequency a owl:DatatypeProperty ;
+    rdfs:domain tcm:Formula ;
+    rdfs:range xsd:string ;
+    rdfs:label "频次"@zh .
+
+tcm:hasNote a owl:DatatypeProperty ;
+    rdfs:range xsd:string ;
+    rdfs:label "备注"@zh .
+
+tcm:isPediatricSafe a owl:DatatypeProperty ;
+    rdfs:domain tcm:Formula ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "儿童可用"@zh .
+
+tcm:isAdultOnly a owl:DatatypeProperty ;
+    rdfs:domain tcm:TreatmentMethod ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "仅限成人"@zh .
+
+tcm:isPreventionFormula a owl:DatatypeProperty ;
+    rdfs:domain tcm:Formula ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "预防用方"@zh .
+
+# ==================== 类公理 ====================
+
+# 证型必须属于某个阶段
+tcm:Syndrome rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty tcm:hasPhase ;
+    owl:someValuesFrom tcm:Phase
+] .
+
+# 方剂至少主治一个证型
+tcm:Formula rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty tcm:treatsSyndrome ;
+    owl:someValuesFrom tcm:Syndrome
+] .

@@ -1,72 +1,122 @@
-# 河北省新冠中医诊疗方案（第七版）- OpenClaw Skill
+# 河北省新冠中医诊疗方案（第七版）- OpenClaw Ontology Skill
 
-基于《河北省新型冠状病毒感染中医药诊疗方案（试行第七版）》的 OpenClaw 技能，提供完整的中医辨证论治参考。
+基于**本体论（Ontology）**的中医知识库，内置 OWL 本体和 Python 推理引擎。
 
-## 功能
+## 核心特性
 
-- **证型速查**：轻型/中型/重型/危重型/恢复期共16种证型的辨证要点与方剂
-- **详细处方**：每种证型的完整方剂组成、剂量与服法
-- **针灸取穴**：各阶段推荐穴位与针刺方法
-- **中成药指导**：按症状分类的中成药选用建议
-- **外治法**：推拿、刮痧、拔罐、穴位贴敷等
-- **儿童方案**：3种儿童证型 + 小儿推拿 + 儿童外治法
-- **预防方案**：5种预防方药 + 穴位保健 + 居家防护
+### 🧠 本体驱动的知识表示
+- **OWL 本体**定义了完整的中医领域概念模型（类、属性、公理）
+- **JSON-LD** 格式的结构化实例数据，可被机器推理和查询
+- 实体关系网络：疾病→阶段→证型→症状/方剂→药物/穴位→经络
 
-## 安装
+### 🔍 智能辨证推理
+根据患者症状自动匹配证型，使用加权算法：
+- 舌象/脉象权重 2.0（核心辨证依据）
+- 普通症状权重 1.0
+- 输出 Top 5 匹配结果及推荐方剂
 
-### 方式一：.skill 文件安装
+### 🕸️ 知识图谱可视化
+以任意证型为中心展开完整关系网络：
+```
+症状 → 证型 → 方剂 → 药物组成
+              ↓
+           穴位 → 经络
+```
 
-下载 `tcm-covid19-hebei.skill` 文件，在 OpenClaw 中安装：
+### 🌿 跨方剂药物分析
+分析某味中药在所有方剂中的用量差异和主治证型。
+
+## 本体架构
 
 ```
-openclaw skills install tcm-covid19-hebei.skill
+Disease ──hasPhase──> Phase ──contains──> Syndrome
+                                       │
+                        ┌───────────────┼───────────────┐
+                        ▼               ▼               ▼
+                   hasSymptom    recommendedFormula   hasAcupoint
+                        │               │               │
+                        ▼               ▼               ▼
+                    Symptom    ┌──Decoction──┐     Acupoint
+                      │        │             │        │
+                 TongueSign    │   composedOf │   belongs_to
+                 PulseSign     ▼             ▼     Meridian
+                              Herb     PatentMedicine
 ```
 
-### 方式二：目录安装
+## 本体统计
 
-将 `tcm-covid19-hebei/` 目录复制到 OpenClaw 的 skills 目录：
+| 类型 | 数量 | 说明 |
+|------|------|------|
+| Syndrome | 16 | 轻型2 + 中型3 + 重型2 + 危重型1 + 恢复期8 |
+| Decoction | 17 | 含清肺排毒汤（通用方） |
+| Symptom | 47 | 含舌象、脉象 |
+| Acupoint | 22 | 跨 9 条经络 |
+| ExternalTherapy | 9 | 针刺/艾灸/推拿/耳穴/刮痧/拔罐/功法 |
+| **总计** | **136** | |
+
+## 使用方式
+
+### 命令行推理引擎
 
 ```bash
-cp -r tcm-covid19-hebei ~/.openclaw/skills/
+# 辨证推理：输入症状，自动匹配证型
+python3 scripts/ontology_query.py diagnosis 发热 咽痛 苔黄
+
+# 知识图谱：展开证型完整关系网络
+python3 scripts/ontology_query.py graph 浊毒闭肺证
+
+# 方剂查询
+python3 scripts/ontology_query.py formula 浊毒化热证
+
+# 跨方剂药物分析
+python3 scripts/ontology_query.py cross-herb 藿香
+
+# 穴位查询
+python3 scripts/ontology_query.py acupoint 重型
+
+# 本体元数据
+python3 scripts/ontology_query.py ontology-info
 ```
+
+### OpenClaw 内使用
+
+安装后，在对话中直接描述患者症状，AI 会自动调用推理引擎进行辨证论治。
 
 ## 目录结构
 
 ```
 tcm-covid19-hebei/
-├── SKILL.md                        # 技能主文件（证型速查表 + 使用指南）
+├── SKILL.md                        # 技能主文件
+├── ontology/
+│   ├── schema.ttl                  # OWL 本体模式（Turtle 格式）
+│   └── instances.jsonld            # 实例数据（JSON-LD 格式，136个实体）
+├── scripts/
+│   └── ontology_query.py           # Python 推理引擎
 ├── references/
-│   └── treatment-detail.md         # 详细处方、外治法、预防方案
-└── README.md                       # 本文件
+│   └── treatment-detail.md         # 详细处方与外治法
+├── README.md
+└── LICENSE
 ```
 
-## 使用示例
+## 安装
 
-安装后，在 OpenClaw 对话中：
+```bash
+# OpenClaw 安装
+openclaw skills install tcm-covid19-hebei.skill
 
-- "患者发热重恶寒轻、咽痛、舌红苔黄，怎么辨证？"
-- "新冠恢复期咳嗽用什么方？"
-- "儿童湿热内蕴型的处方是什么？"
-- "重型高热不退怎么处理？"
-- "有什么预防新冠的中药方？"
+# 或直接复制
+cp -r tcm-covid19-hebei ~/.openclaw/skills/
+```
 
-## 证型总览
+## 技术栈
 
-| 阶段 | 证型 | 主要方剂 |
-|------|------|----------|
-| 轻型 | 浊毒袭表证 | 葛根汤合麻杏薏甘汤加减 |
-| 轻型 | 浊毒化热证 | 柴葛解肌汤加减 |
-| 中型 | 浊毒郁肺证 | 宣肺败毒方 |
-| 中型 | 寒湿阻肺证 | 寒湿疫方 |
-| 中型 | 湿热郁滞证 | 甘露消毒丹加减 |
-| 重型 | 浊毒闭肺证 | 化湿败毒方 |
-| 重型 | 阳衰毒盛证 | 扶正解毒方 |
-| 危重型 | 内闭外脱证 | 参附汤送服苏合香丸/安宫牛黄丸 |
-| 恢复期 | 8种细分证型 | 六君子汤/止嗽散/逍遥散等 |
+- **本体语言**: OWL 2 / RDF (Turtle) + JSON-LD
+- **推理引擎**: Python 3 (加权匹配算法)
+- **知识表示**: 面向对象的中医领域本体
 
 ## 免责声明
 
-本技能内容来源于河北省中医药管理局公开发布的诊疗方案，仅供中医学习与参考。实际用药请务必在执业中医师指导下进行，切勿自行用药。
+本技能内容来源于河北省中医药管理局公开发布的诊疗方案，仅供中医学习与参考。实际用药请务必在执业中医师指导下进行。
 
 ## 来源
 
